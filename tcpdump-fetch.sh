@@ -59,6 +59,27 @@ term() {
 trap term SIGTERM SIGINT
 
 echo "----------------------------------------------------------"
+echo "Starting daemonsets"
+echo "----------------------------------------------------------"
+
+waitingToStart=1;
+while [ "$waitingToStart" -eq 1 ];
+do
+    podList=$(oc --kubeconfig /tmp/kubeconfig --namespace openshift-ovn-kubernetes get pods -l app=tcpdump-capture --field-selector=status.phase!=Running --output=jsonpath={.items..metadata.name});
+
+    if [[ -z $podList || $podList = "" ]]
+    then
+	waitingToStart=0;
+	echo "Daemonsets Running";
+    else
+	echo "Waiting for " ${podList} "to become Ready...";
+    fi
+
+    sleep 1;
+done
+
+
+echo "----------------------------------------------------------"
 echo "Starting the pcaps. These will run until failure of killed. Kill with Crtl + C to copy back the contents"
 echo "----------------------------------------------------------"
 
